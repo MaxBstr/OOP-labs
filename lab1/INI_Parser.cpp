@@ -13,7 +13,7 @@ class Parser
 private:
     std::map<std::string, std::map<std::string, std::string>> DATA;
 
-    void tryToGetElement(std::string SECTION, std::string KEY) //check exist ? continue : warning
+    bool tryToGetElement(std::string SECTION, std::string KEY) //check exist ? continue : warning
     {
         bool FindSection, FindKey;
         for (auto& section : DATA)
@@ -32,13 +32,14 @@ private:
         if(!FindSection)
         {
             std::cerr << "ERROR!\nCan`t get access! SECTION: " << SECTION << " doesn`t exist!\n";
-            exit(1);
+            return false;
         }
         if(!FindKey)
         {
             std::cerr << "ERROR!\nCan`t get access! KEY: " << KEY << " doesn`t exist!\n";
-            exit(1);
+            return false;
         }
+        return true;
     }
 
 public:
@@ -145,7 +146,10 @@ public:
 
     bool TryGetInt(const std::string& SECTION, const std::string& KEY, int& result)
     {
-        tryToGetElement(SECTION, KEY);
+        bool isFind = tryToGetElement(SECTION, KEY);
+        if(!isFind) //if couldn`t find
+            return false;
+
         //if no warning
         try
         {
@@ -157,7 +161,10 @@ public:
 
     bool TryGetDouble(const std::string& SECTION, const std::string& KEY, double& result)
     {
-        tryToGetElement(SECTION, KEY);
+        bool isFind = tryToGetElement(SECTION, KEY);
+        if(!isFind) //if couldn`t find
+            return false;
+
         //if no warning
         try
         {
@@ -170,7 +177,10 @@ public:
     template<typename T>
     bool TryGet(const std::string& SECTION, const std::string& KEY, T& result)
     {
-        tryToGetElement(SECTION, KEY);
+        bool isFind = tryToGetElement(SECTION, KEY);
+        if(!isFind) //if couldn`t find
+            return false;
+
         int typeSize = sizeof(T);
 
         if (typeSize == 4) //int
