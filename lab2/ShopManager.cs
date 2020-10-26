@@ -1,83 +1,69 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Shop
 {
-    public class ShopManager
+    public static class ShopManager
     {
-        private List<Shop> Shops = new List<Shop>();
+        private static readonly List<Shop> Shops = new List<Shop>();
         
-        public ShopManager() {}
-        
-        public ShopManager(Shop newShop) { Shops.Add(newShop); }
-
-        public ShopManager(IEnumerable<Shop> newShops)
+        public static void AddShop(Shop newShop)
         {
-            foreach (var shop in newShops)
-            {
-                var existShop = Shops.Find(x => x.ShopName == shop.ShopName && x.ShopAdress == shop.ShopAdress);
-                if (existShop == null)
-                    Shops.Add(shop);
-            }
-        }
-
-        public void AddShop(Shop newShop)
-        {
-            var existShop = Shops.Find(x => x.ShopName == newShop.ShopName && x.ShopAdress == newShop.ShopAdress);
+            var existShop = Shops.Find(x => x.ShopName == newShop.ShopName && x.ShopAddress == newShop.ShopAddress);
             if (existShop == null)
                 Shops.Add(newShop);
         }
 
-        public Shop FindShopWithMinPrice(string itemName)
+        public static Shop FindShopWithMinPrice(string itemName)
         {
             var minPrice = int.MaxValue;
             var isFind = false;
-            var shopID = 0;
+            var shopId = 0;
 
             foreach (var shop in Shops)
             {
                 foreach (var item in shop.ShopItemsGet.FindAll(it => itemName == it.ItemName).Where(item => item.UnitPrice < minPrice))
                 {
                     minPrice = item.UnitPrice;
-                    shopID = shop.ShopID;
+                    shopId = shop.ShopId;
                     isFind = true;
                 }
             }
 
-            if (isFind) return Shops.Find(sh => sh.ShopID == shopID);
+            if (isFind) return Shops.Find(sh => sh.ShopId == shopId);
             Console.WriteLine($"Item {itemName} was not found");
             return null;
         }
 
-        public void AddProductToShop(int shopID, Item newItem)
+        public static void AddProductToShop(int shopId, Item newItem)
         {
-            var shop = Shops.Find(sh => sh.ShopID == shopID);
+            var shop = Shops.Find(sh => sh.ShopId == shopId);
             if (shop != null)
                 shop.AddProduct(newItem);
             else
-                Console.WriteLine($"Shop with ID: {shopID} was not found!");
+                Console.WriteLine($"Shop with ID: {shopId} was not found!");
         }
 
-        public void AddProductsToShop(int shopID, IEnumerable<Item> newItems)
+        public static void AddProductsToShop(int shopId, IEnumerable<Item> newItems)
         {
-            var shop = Shops.Find(sh => sh.ShopID == shopID);
+            var shop = Shops.Find(sh => sh.ShopId == shopId);
             if (shop != null)
                 shop.AddProducts(newItems);
             else
-                Console.WriteLine($"Shop with ID: {shopID} was not found!");
+                Console.WriteLine($"Shop with ID: {shopId} was not found!");
         }
 
-        public void ChangeItemPrice(int shopID, int itemID, int unitPrice)
+        public static void ChangeItemPrice(int shopID, int itemID, int unitPrice)
         {
-            var shop = Shops.Find(sh => sh.ShopID == shopID);
+            var shop = Shops.Find(sh => sh.ShopId == shopID);
             if (shop == null)
             {
                 Console.WriteLine($"Error! Can`t find the shop with {shopID} ID");
                 return;
             }
             
-            var item = shop.ShopItemsGet.Find(it => it.ItemID == itemID);
+            var item = shop.ShopItemsGet.Find(it => it.ItemId == itemID);
             if (item == null)
             {
                 Console.WriteLine($"Error! Can`t find item with {itemID} ID in the shop with {shopID} ID");
@@ -87,29 +73,29 @@ namespace Shop
             shop.ChangePrice(item, unitPrice);
         }
 
-        public bool MakeOrder(int shopID, ref int orderSum, Dictionary<string, int> Order)
+        public static bool MakeOrder(int shopId, ref int orderSum, Dictionary<string, int> order)
         {
-            var shop = Shops.Find(sh => sh.ShopID == shopID);
+            var shop = Shops.Find(sh => sh.ShopId == shopId);
             if (shop == null)
             {
-                Console.WriteLine($"Error! Can`t find shop with {shopID} ID");
+                Console.WriteLine($"Error! Can`t find shop with {shopId} ID");
                 return false;
             }
             
             var isError = false;
             
-            foreach (var (itemName, amount) in Order)
+            foreach (var (itemName, amount) in order)
             {
-                var Items = shop.ShopItemsGet.FindAll(it => it.ItemName == itemName);
+                var items = shop.ShopItemsGet.FindAll(it => it.ItemName == itemName);
                 
-                if (Items.Count == 0)
+                if (items.Count == 0)
                 {
                     Console.WriteLine($"Item {itemName} was not found!");
                     isError = true;
                     break;
                 }
                 
-                if (Items.Count == 1 && Items[0].ItemAmount < amount)
+                if (items.Count == 1 && items[0].ItemAmount < amount)
                 {
                     Console.WriteLine($"Can not make an order. Not enough items of {itemName}.");
                     isError = true;
@@ -117,7 +103,7 @@ namespace Shop
                 }
 
                 var isFind = false;
-                foreach (var item in Items.Where(item => item.ItemAmount > amount))
+                foreach (var item in items.Where(item => item.ItemAmount >= amount))
                 {
                     isFind = true;
                     orderSum += amount * item.UnitPrice;
@@ -136,50 +122,55 @@ namespace Shop
             return false;
         }
         
-        public void PrintWhatCanIBuy(int shopID, int money)
+        public static void PrintWhatCanIBuy(int shopId, int money)
         {
-            var Items = WhatCanBuy(shopID, money);
-            if (Items == null)
+            var items = WhatCanBuy(shopId, money);
+            if (items == null)
             {
                 Console.WriteLine($"Sorry, you can not buy anything, because you have not enough money: {money}");
                 return;
             }
 
-            var shop = Shops.Find(sh => sh.ShopID == shopID);
-            Console.WriteLine($"In {shop.ShopName} which is located in {shop.ShopAdress}, having {money} rubles you can buy:");
-            foreach (var item in Items)
+            var shop = Shops.Find(sh => sh.ShopId == shopId);
+            if (shop == null)
+            {
+                Console.WriteLine($"Shop with {shopId} ID does not exist!");
+                return;
+            }
+            
+            Console.WriteLine($"In {shop.ShopName} which is located in {shop.ShopAddress}, having {money} rubles you can buy:");
+            foreach (var item in items)
                 Console.WriteLine($"{item.ItemAmount} {item.ItemName} for {item.UnitPrice} rub per unit");
         }
 
-        private List<Item> WhatCanBuy(int shopID, int money)
+        private static List<Item> WhatCanBuy(int shopId, int money)
         {
-            var shop = Shops.Find(sh => sh.ShopID == shopID);
+            var shop = Shops.Find(sh => sh.ShopId == shopId);
+            if (shop == null)
+            {
+                Console.WriteLine($"Shop with {shopId} ID does not exists!");
+                return null;
+            }
             var isAdded = false;
-            var Items = new List<Item>();
+            var items = new List<Item>();
             
             foreach (var item in shop.ShopItemsGet)
             {
-                //если цена за единицу товара больше имеющихся средств, пропускаем товар
-                if (item.UnitPrice > money) continue;
-                
-                var curPrice = item.UnitPrice;
-                var i = 0;
-                do
+                var count = money / item.UnitPrice;
+
+                if (0 < count && count <= item.ItemAmount)
                 {
-                    i++;
-                    curPrice = item.UnitPrice * i;
-                } while (curPrice < money && i < item.ItemAmount);
-                
-                Items.Add(new Item(item.ItemName, i, item.UnitPrice));
-                isAdded = true;
+                    items.Add(new Item(item.ItemName, count, item.UnitPrice));
+                    isAdded = true;
+                }
             }
 
-            return !isAdded ? null : Items;
+            return !isAdded ? null : items;
         }
 
-        public Shop FindShopWithMinPrice(Dictionary<string, int> Order)
+        public static Shop FindShopWithMinPrice(Dictionary<string, int> order)
         {
-            int shopID = 0;
+            var shopId = 0;
             var minPrice = int.MaxValue;
             var isFind = false;
             
@@ -187,37 +178,46 @@ namespace Shop
             {
                 var curPrice = 0;
                 var isError = false;
-                foreach (var (itemName, amount) in Order)
+                
+                foreach (var (itemName, amount) in order)
                 {
-                    var item = shop.ShopItemsGet.Find(it => it.ItemName == itemName);
-                    if (item == null || item.ItemAmount < amount)
+                    //одинаковые имена, но разные id и цены за единицу
+                    var sameItems = shop.ShopItemsGet.FindAll(it => it.ItemName == itemName);
+                    //если не нашли хоть 1 товар
+                    if (sameItems.Count == 0)
                     {
                         isError = true;
                         break;
                     }
-                    curPrice += amount * item.UnitPrice;
+
+                    var isFindItem = false;
+                    var minUnitPrice = int.MaxValue;
+                    //перебираем все товары с одинаковыми именами, ищем мин стоимость при выполнении условия на кол-во товаров
+                    foreach (var item in sameItems.Where(item => item.UnitPrice < minUnitPrice && item.ItemAmount > amount))
+                    {
+                        minUnitPrice = item.UnitPrice;
+                        isFindItem = true;
+                    }
+
+                    curPrice += amount * minUnitPrice;
+                    
+                    if(isFindItem) continue;
+                    
+                    isError = true;
+                    break;
                 }
 
                 if (isError || curPrice >= minPrice) continue;
 
                 minPrice = curPrice;
-                shopID = shop.ShopID;
+                shopId = shop.ShopId;
                 isFind = true;
             }
 
-            if (isFind) return Shops.Find(sh => sh.ShopID == shopID);
+            if (isFind) return Shops.Find(sh => sh.ShopId == shopId);
+            
             Console.Write("Sorry, but you can`t buy all items that you mentioned in order in all shops");
             return null;
         }
-        
-        public void PrintShops()
-        {
-            foreach (var shop in Shops)
-            {
-                Console.WriteLine($"Shop: {shop.ShopName}\nLocation: {shop.ShopAdress}");
-                Console.WriteLine("=================");
-            }
-        }
-        
     }
 }
