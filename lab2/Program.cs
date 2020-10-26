@@ -1,23 +1,21 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Shop
 {
-    class Program
+    public static class Program
     {
         private static void Main()
         {
-            var SM = new ShopManager();
-             
-            SM.AddShop(new Shop("Lenta", "Moscow"));
-            SM.AddShop(new Shop("Metro", "SPB"));
-            SM.AddShop(new Shop("Ashan", "Tambov"));
+            ShopManager.AddShop(new Shop("Lenta", "Moscow"));
+            ShopManager.AddShop(new Shop("Metro", "SPB"));
+            ShopManager.AddShop(new Shop("Ashan", "Tambov"));
 
-            SM.AddProductsToShop(1, new List<Item>
+            ShopManager.AddProductsToShop(1, new List<Item>
             {
                 new Item("Milk", 10, 40),
                 new Item("Bread", 20, 25),
-                new Item("Meat", 15, 70),
+                new Item("Meat", 15, 120),
                 new Item("Milk", 15, 40),
                 new Item("Bread", 8, 35),
                 
@@ -28,12 +26,12 @@ namespace Shop
                 new Item("Fruits", 10, 70)
             });
             
-            SM.AddProductsToShop(2, new List<Item>
+            ShopManager.AddProductsToShop(2, new List<Item>
             {
                 new Item("Milk", 15, 50),
                 new Item("Vegetables", 15, 70),
                 new Item("Meat", 20, 90),
-                new Item("Bread", 30, 30),
+                new Item("Bread", 22, 30),
                 new Item("Eggs", 20, 40),
                 
                 new Item("Milk", 10, 60),
@@ -43,7 +41,7 @@ namespace Shop
                 new Item("Chicken", 10, 50)
             });
             
-            SM.AddProductsToShop(3, new List<Item>
+            ShopManager.AddProductsToShop(3, new List<Item>
             {
                 new Item("Milk", 12, 45),
                 new Item("Lemonade", 10, 10),
@@ -57,14 +55,43 @@ namespace Shop
                 new Item("Cheese", 17, 90),
                 new Item("Bread", 13, 40)
             });
-            var result = 0;
-            var isTrue = false;
-            isTrue = SM.MakeOrder(1, ref result, new Dictionary<string, int>
+            
+            
+            var totalPrice = 0;
+            var canMakeOrder = ShopManager.MakeOrder(1, ref totalPrice, new Dictionary<string, int>
             {
                 {"Milk", 13}, {"Bread", 10}, {"Eggs", 10}
             });
-            if(isTrue)
-                Console.WriteLine(result);
+            
+            if(canMakeOrder)
+                Console.WriteLine(totalPrice);
+
+            
+            try
+            {
+                var shop = ShopManager.FindShopWithMinPrice("Bread");
+                Console.WriteLine(shop.ShopName);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            
+            
+            ShopManager.PrintWhatCanIBuy(3, 400);
+
+            try
+            {
+                var sh = ShopManager.FindShopWithMinPrice(new Dictionary<string, int>
+                {
+                    {"Bread", 10}, {"Milk", 15}
+                });
+                Console.WriteLine(sh.ShopId);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
     }
 }
