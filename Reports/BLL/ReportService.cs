@@ -78,7 +78,7 @@ namespace BLL
 
         private Task DalToBll(DAL.Task dalTask)
         {
-            var dllTask = new Task(dalTask.TaskName, dalTask.TaskDescription, dalTask.CreationDate)
+            var bllTask = new Task(dalTask.TaskName, dalTask.TaskDescription, dalTask.CreationDate)
             {
                 Id = dalTask.Id,
                 status = (TaskStatus) dalTask.Status,
@@ -88,10 +88,10 @@ namespace BLL
 
             foreach (var dalReport in dalTask.Reports)
             {
-                dllTask._reports.Add(new Report {Changes = dalReport.Changes, Date = dalReport.Date});
+                bllTask._reports.Add(new Report {Changes = dalReport.Changes, Date = dalReport.Date});
             }
 
-            return dllTask;
+            return bllTask;
         }
     }
 }
